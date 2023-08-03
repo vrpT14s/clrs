@@ -76,7 +76,7 @@ void insert_into_subtree(rbt_t* T, node_t* subtree_root, node_t* node_to_insert)
 		//else
 		z = z->c[dir];
 	}
-	//TODO: fix_color()
+	color_fix_after_insert(T, node_to_insert);
 }
 
 void insert_into_tree(rbt_t* T, node_t* node_to_insert)
@@ -120,29 +120,36 @@ nil?	%d	\n\
 
 void rotate(rbt_t* T, node_t** p, bool dir)
 {
-	node_t** ch = &((*p)->c[!dir]);
-	if ((*ch) == T->nil) {
+	if (*p == T->nil) {
+		printf("Rotate error.\n");
+		exit(1);
+	}
+	node_t* ch = (*p)->c[!dir];
+	if (ch == T->nil) {
 		printf("Rotate error.\n");
 		exit(1);
 	}
 	//1 - set c's p to grandfather
-	(*ch)->p = (*p)->p;
-	if (*ch == T->nil) {
-		ch = 1/0;
+	ch->p = (*p)->p;
+	if (ch == T->nil) {
 		printf("FUCK ALL OF YOU\n");
+		ch = 1/0;
+		exit(1);
 	}
 	//2 - set grandfather's son (replace (*p)) to ch(ild)
-	(*p)->p->c[(*p)->p->c[1] == (*p)] = (*ch);
+	if ((*p)->p != T->nil){
+		(*p)->p->c[(*p)->p->c[1] == (*p)] = ch;
+	}
 	//3 - set (*p)'s p to ch
-	(*p)->p = (*ch);
+	(*p)->p = ch;
 	//4 - replace ch in (*p)'s c list with ch's swing c
-	(*p)->c[!dir] = (*ch)->c[dir];
+	(*p)->c[!dir] = ch->c[dir];
 	//5 - set swing c's p to (*p), but only if it exists
-	if ((*ch)->c[dir] != T->nil){
-		(*ch)->c[dir]->p = (*p);
+	if (ch->c[dir] != T->nil){
+		ch->c[dir]->p = (*p);
 	}
 	//6 - replace swing c in ch's c list with (*p)
-	(*ch)->c[dir] = (*p);
+	ch->c[dir] = (*p);
 	return;
 }
 
@@ -191,6 +198,66 @@ void navigate_tree_prompt(rbt_t* T, node_t* starting_node)
 	}
 }
 
+bool type_of_child(node_t* child)
+{
+	return (child->p->c[1] == child);
+}
+
+void set_red(node_t* node)
+{
+	node->color = RED;
+}
+
+
+void set_black(node_t* node)
+{
+	node->color = BLACK;
+}
+
+void color_fix_after_insert(rbt_t* T, node_t* inserted_node)
+{
+	node_t* z = inserted_node;
+	while (z->p->color == RED) {
+		/* z - current node
+		 * p - parent
+		 * pp - grand parent
+		 * u - uncle
+		 */
+		bool pdir = type_of_child(z->p);
+		node_t** p = &(z->p);
+		node_t** pp = &(z->p->p);
+		node_t** u = &(z->p->p->c[!pdir]);
+		//case 1:
+		//uncle is red
+case_1:
+		if ((*u)->color == RED) {
+			set_black(*u);
+			set_black(*p);
+			set_red(*pp);
+			z = *pp;
+			continue;
+		}
+case_2:
+		//case 2:
+		//uncle is black and z is rotation adoptee
+		if (type_of_child(z) != pdir) {
+			rotate(T, p, pdir);
+			rotate(T, pp, !pdir);
+			set_black(z);
+			set_red(*pp);
+			break;
+		}
+case_3:
+		//case 3:
+		//uncle is black and z is not rotation adoptee
+		rotate(T, pp, !pdir);
+		set_black(*p);
+		set_red(*pp);
+		break;
+	}
+	set_black(T->root);
+}
+
 int main(int argc, char** argv)
 {
 	srand(time(NULL));
@@ -205,15 +272,20 @@ int main(int argc, char** argv)
 		int key = atoi(argv[i]);
 		char* name = "ok";
 		insert_into_tree(tree, make_node(tree, RED, key, name));
+		navigate_tree_prompt(tree, tree->root);
 	}
 	} else {
 	for (int i = 0; i < 4; i++){
 		int key = rand() % 2000 - 1000;
+		printf("Adding %d\n", key);
 		char* name = " ith node";
 		//name[0] = (i % 10) + '0';
 		//name[1] = (i) + '0';
 		insert_into_tree(tree, make_node(tree, RED, key, name));
+		navigate_tree_prompt(tree, tree->root);
+
 	}
 	}
 	navigate_tree_prompt(tree, tree->root);
 }
+
