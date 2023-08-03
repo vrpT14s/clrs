@@ -94,62 +94,64 @@ void insert_into_tree(rbt_t* T, node_t* node_to_insert)
 	}
 }
 
+char color_char(bool color)
+{
+	return color ? 'b' : 'r';
+}
+
 void print_node(rbt_t* T, node_t* n)
 {
-	char color_char = n->color ? 'B' : 'R';
-	printf(" \n\
-addr	0x%x	\n\
-name	%s	\n\
-key	%d	\n\
-color	%c	\n\
-nil?	%d	\n\
-	\n\
-parent  0x%x	\n\
-name	%s	\n\
-nil?	%d	\n\
-	\n\
-cleft	0x%x	\n\
-key	%d	\n\
-nil?	%d	\n\
-cright	0x%x	\n\
-key	%d	\n\
-nil?	%d	\n\
-", n, n->name, n->key, color_char, (n == T->nil), n->p, n->p->name, (n->p == T->nil), n->c[LEFT], n->c[LEFT]->key, (n->c[LEFT] == T->nil), n->c[RIGHT], n->c[RIGHT]->key, (n->c[RIGHT] == T->nil));
+	printf("\n");
+	char* printstring = "name\t%s\nkey\t%d\ncolor\t%c\n";
+	printf(printstring, n->name, n->key, color_char(n->color));
+	if (n->c[LEFT] == T->nil) printf("\nLEFT NIL\n");
+	else {
+		printf("\nLEFT\n");
+		node_t* c = n->c[LEFT];
+		printf(printstring, c->name, c->key, color_char(c->color));
+	}
+
+	if (n->c[RIGHT] == T->nil) printf("\nRIGHT NIL\n");
+	else {
+		printf("\nRIGHT\n");
+		node_t* c = n->c[RIGHT];
+		printf(printstring, c->name, c->key, color_char(c->color));
+	}
 	return;
 }
 
-void rotate(rbt_t* T, node_t** p, bool dir)
+void rotate(rbt_t* T, node_t* p, bool dir)
 {
-	if (*p == T->nil) {
+	if (p == T->nil) {
 		printf("Rotate error.\n");
 		exit(1);
 	}
-	node_t* ch = (*p)->c[!dir];
+	node_t* ch = p->c[!dir];
 	if (ch == T->nil) {
 		printf("Rotate error.\n");
 		exit(1);
 	}
 	//1 - set c's p to grandfather
-	ch->p = (*p)->p;
+	ch->p = p->p;
 	if (ch == T->nil) {
 		printf("FUCK ALL OF YOU\n");
-		ch = 1/0;
+		//ch = 1/0;
 		exit(1);
 	}
-	//2 - set grandfather's son (replace (*p)) to ch(ild)
-	if ((*p)->p != T->nil){
-		(*p)->p->c[(*p)->p->c[1] == (*p)] = ch;
+	//2 - set grandfather's son (replace p) to ch(ild)
+	if (p->p != T->nil){
+		p->p->c[p->p->c[1] == p] = ch;
 	}
-	//3 - set (*p)'s p to ch
-	(*p)->p = ch;
-	//4 - replace ch in (*p)'s c list with ch's swing c
-	(*p)->c[!dir] = ch->c[dir];
-	//5 - set swing c's p to (*p), but only if it exists
+	//3 - set p's p to ch
+	p->p = ch;
+	//4 - replace ch in p's c list with ch's swing c
+	p->c[!dir] = ch->c[dir];
+	//5 - set swing c's p to p, but only if it exists
 	if (ch->c[dir] != T->nil){
-		ch->c[dir]->p = (*p);
+		ch->c[dir]->p = p;
 	}
-	//6 - replace swing c in ch's c list with (*p)
-	ch->c[dir] = (*p);
+	//6 - replace swing c in ch's c list with p
+	ch->c[dir] = p;
 	return;
 }
 
@@ -181,10 +183,10 @@ void navigate_tree_prompt(rbt_t* T, node_t* starting_node)
 			z = z->c[RIGHT];
 			break;
 		case 'L':
-			rotate(T, &z, LEFT);
+			rotate(T, z, LEFT);
 			break;
 		case 'R':
-			rotate(T, &z, RIGHT);
+			rotate(T, z, RIGHT);
 			break;
 		case 't':
 			z = starting_node;
@@ -208,7 +210,6 @@ void set_red(node_t* node)
 	node->color = RED;
 }
 
-
 void set_black(node_t* node)
 {
 	node->color = BLACK;
@@ -224,17 +225,17 @@ void color_fix_after_insert(rbt_t* T, node_t* inserted_node)
 		 * u - uncle
 		 */
 		bool pdir = type_of_child(z->p);
-		node_t** p = &(z->p);
-		node_t** pp = &(z->p->p);
-		node_t** u = &(z->p->p->c[!pdir]);
+		node_t* p = (z->p);
+		node_t* pp = (z->p->p);
+		node_t* u = (z->p->p->c[!pdir]);
 		//case 1:
 		//uncle is red
 case_1:
-		if ((*u)->color == RED) {
-			set_black(*u);
-			set_black(*p);
-			set_red(*pp);
-			z = *pp;
+		if (u->color == RED) {
+			set_black(u);
+			set_black(p);
+			set_red(pp);
+			z = pp;
 			continue;
 		}
 case_2:
@@ -244,16 +245,19 @@ case_2:
 			rotate(T, p, pdir);
 			rotate(T, pp, !pdir);
 			set_black(z);
-			set_red(*pp);
+			set_red(pp);
 			break;
 		}
 case_3:
 		//case 3:
 		//uncle is black and z is not rotation adoptee
 		rotate(T, pp, !pdir);
-		set_black(*p);
-		set_red(*pp);
+		set_black(p);
+		set_red(pp);
 		break;
+	}
+	if (T->root->p != T->nil){
+		T->root = T->root->p;
 	}
 	set_black(T->root);
 }
@@ -275,17 +279,16 @@ int main(int argc, char** argv)
 		navigate_tree_prompt(tree, tree->root);
 	}
 	} else {
-	for (int i = 0; i < 4; i++){
+	for (int i = 0; i < 400; i++){
 		int key = rand() % 2000 - 1000;
 		printf("Adding %d\n", key);
 		char* name = " ith node";
 		//name[0] = (i % 10) + '0';
 		//name[1] = (i) + '0';
 		insert_into_tree(tree, make_node(tree, RED, key, name));
-		navigate_tree_prompt(tree, tree->root);
+		//navigate_tree_prompt(tree, tree->root);
 
 	}
 	}
 	navigate_tree_prompt(tree, tree->root);
 }
-
