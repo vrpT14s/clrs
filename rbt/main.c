@@ -92,6 +92,7 @@ void insert_into_tree(rbt_t* T, node_t* node_to_insert)
 	} else {
 		insert_into_subtree(T, T->root, node_to_insert);
 	}
+	T->number_of_nodes++;
 }
 
 char color_char(bool color)
@@ -103,7 +104,9 @@ void print_node(rbt_t* T, node_t* n)
 {
 	printf("\n");
 	char* printstring = "name\t%s\nkey\t%d\ncolor\t%c\n";
+	printf("\n");
 	printf(printstring, n->name, n->key, color_char(n->color));
+
 	if (n->c[LEFT] == T->nil) printf("\nLEFT NIL\n");
 	else {
 		printf("\nLEFT\n");
@@ -262,6 +265,43 @@ case_3:
 	set_black(T->root);
 }
 
+//returns bnode height of subtree
+int validate(rbt_t* T, node_t* subtree_root, int* temp_node_number)
+{
+	if (subtree_root == T->nil) return 1;
+	(*temp_node_number)++;
+	int bnodes1 = validate(T, subtree_root->c[0], temp_node_number);
+	int bnodes2 = validate(T, subtree_root->c[1], temp_node_number);
+	//if (bnodes1 < 0) return;
+	if (bnodes2 != bnodes1){
+		//can return neg value and propogate error
+		//if i dont want full exit
+		printf("%d - Black property fail\n", subtree_root->key);
+		//exit(1);
+	}
+
+	if (subtree_root->color == RED){
+		if (subtree_root->p->color == RED){
+			printf("%d - Red property fail\n", subtree_root->key);
+			//exit(1);
+		}
+		return bnodes1;
+	} else {
+		return bnodes1 + 1;
+	}
+}
+
+int validate_tree(rbt_t* rbt)
+{
+	int temp_node_number = 0;
+	int bheight = validate(rbt, rbt->root, &temp_node_number);
+	if (temp_node_number != rbt->number_of_nodes){
+		printf("calculated node number not accurate, node lossage\n");
+	}
+	printf("\n\n%d - nodes\n%d - calculated node number\n", rbt->number_of_nodes, temp_node_number);
+	printf("\ncalculated blackheight - %d\n", bheight);
+}
+
 int main(int argc, char** argv)
 {
 	srand(time(NULL));
@@ -290,5 +330,6 @@ int main(int argc, char** argv)
 
 	}
 	}
+	validate_tree(tree);
 	navigate_tree_prompt(tree, tree->root);
 }
