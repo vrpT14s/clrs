@@ -302,6 +302,50 @@ int validate_tree(rbt_t* rbt)
 	printf("\ncalculated blackheight - %d\n", bheight);
 }
 
+void make_dot(rbt_t* T, node_t* node, const char* path)
+{
+	FILE* fd = fopen(path, "w");
+	if (!fd) {
+		fprintf(stderr, "%s unable to be opened.\n", path);
+		return;
+	}
+	fprintf(fd, "digraph Q {\n");
+	int err;
+	if (err = ferror(fd)) {
+		printf("ERROR! %s", strerror(err));
+		return;
+	}
+	fprintf(fd, "x%1$x [label=\"NIL\"];\n", T->nil);
+	/*
+	if (node->parent == T->nil) {
+		fprintf(fd, "x%1$x [label=\"\"];\n", node);
+	} else {
+	*/
+	fprintf(fd, "x%1$x [label=\"%2$d\"];\n", node->p, node->p->key);
+	//}
+	make_dot_helper(node, fd);
+	fprintf(fd, "}\n");
+
+	fclose(fd);
+}
+
+void make_dot_helper(rbt_t* T, node_t* node, FILE* fd)
+{
+	if (node == T->nil) {
+		printf("HIT NULL!");
+		//fprintf(fd, "x%x -> x%x;\n", node->parent, node);
+		return;
+	}
+	//fprintf(fd, "x%1$x [label=\"%4$d%5$c %2$d\"];\nx%3$x -> x%1$x;\n", node, node->key, node->p, node->color, 'l');//color_char(node->color));
+	int err;
+	if (err = ferror(fd)) {
+		printf("ERROR! %s", strerror(err));
+		return;
+	}
+	make_dot_helper(T, node->c[LEFT], fd);
+	make_dot_helper(T, node->c[RIGHT], fd);
+}
+
 int main(int argc, char** argv)
 {
 	srand(time(NULL));
@@ -331,5 +375,6 @@ int main(int argc, char** argv)
 	}
 	}
 	validate_tree(tree);
+	make_dot(tree, tree->root, "trash/fuck.dot");
 	navigate_tree_prompt(tree, tree->root);
 }
