@@ -1,5 +1,9 @@
 main: main.c
 	gcc main.c -omain -g
+main64: main.c
+	gcc -march=native -Ofast main.c -omain -g
+bst: bst.c
+	gcc -Ofast bst.c -obst -g
 run: main
 	./main
 d: main

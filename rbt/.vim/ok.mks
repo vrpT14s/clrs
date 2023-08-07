@@ -1,0 +1,138 @@
+let SessionLoad = 1
+let s:so_save = &g:so | let s:siso_save = &g:siso | setg so=0 siso=0 | setl so=-1 siso=-1
+let v:this_session=expand("<sfile>:p")
+silent only
+silent tabonly
+cd ~/clrs/rbt
+if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
+  let s:wipebuf = bufnr('%')
+endif
+let s:shortmess_save = &shortmess
+if &shortmess =~ 'A'
+  set shortmess=aoOA
+else
+  set shortmess=aoO
+endif
+badd +1 main.c
+badd +8 man://fopen(3)
+badd +1333 term://~/clrs/rbt//18082:/bin/bash
+badd +27 trash/ok.dot
+badd +0 man://printf(3)
+argglobal
+%argdel
+$argadd main.c
+edit main.c
+let s:save_splitbelow = &splitbelow
+let s:save_splitright = &splitright
+set splitbelow splitright
+wincmd _ | wincmd |
+vsplit
+1wincmd h
+wincmd w
+wincmd _ | wincmd |
+split
+1wincmd k
+wincmd w
+let &splitbelow = s:save_splitbelow
+let &splitright = s:save_splitright
+wincmd t
+let s:save_winminheight = &winminheight
+let s:save_winminwidth = &winminwidth
+set winminheight=0
+set winheight=1
+set winminwidth=0
+set winwidth=1
+exe 'vert 1resize ' . ((&columns * 159 + 159) / 319)
+exe '2resize ' . ((&lines * 40 + 41) / 82)
+exe 'vert 2resize ' . ((&columns * 159 + 159) / 319)
+exe '3resize ' . ((&lines * 39 + 41) / 82)
+exe 'vert 3resize ' . ((&columns * 159 + 159) / 319)
+argglobal
+setlocal fdm=syntax
+setlocal fde=0
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=0
+setlocal fml=1
+setlocal fdn=20
+setlocal fen
+331
+normal! zo
+339
+normal! zo
+340
+normal! zo
+347
+normal! zo
+let s:l = 359 - ((323 * winheight(0) + 40) / 80)
+if s:l < 1 | let s:l = 1 | endif
+keepjumps exe s:l
+normal! zt
+keepjumps 359
+normal! 032|
+wincmd w
+argglobal
+if bufexists(fnamemodify("trash/ok.dot", ":p")) | buffer trash/ok.dot | else | edit trash/ok.dot | endif
+if &buftype ==# 'terminal'
+  silent file trash/ok.dot
+endif
+setlocal fdm=syntax
+setlocal fde=0
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=0
+setlocal fml=1
+setlocal fdn=20
+setlocal nofen
+let s:l = 17 - ((9 * winheight(0) + 20) / 40)
+if s:l < 1 | let s:l = 1 | endif
+keepjumps exe s:l
+normal! zt
+keepjumps 17
+normal! 0
+wincmd w
+argglobal
+if bufexists(fnamemodify("term://~/clrs/rbt//18082:/bin/bash", ":p")) | buffer term://~/clrs/rbt//18082:/bin/bash | else | edit term://~/clrs/rbt//18082:/bin/bash | endif
+if &buftype ==# 'terminal'
+  silent file term://~/clrs/rbt//18082:/bin/bash
+endif
+balt man://printf(3)
+setlocal fdm=syntax
+setlocal fde=0
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=0
+setlocal fml=1
+setlocal fdn=20
+setlocal nofen
+let s:l = 10037 - ((38 * winheight(0) + 19) / 39)
+if s:l < 1 | let s:l = 1 | endif
+keepjumps exe s:l
+normal! zt
+keepjumps 10037
+normal! 02|
+wincmd w
+3wincmd w
+exe 'vert 1resize ' . ((&columns * 159 + 159) / 319)
+exe '2resize ' . ((&lines * 40 + 41) / 82)
+exe 'vert 2resize ' . ((&columns * 159 + 159) / 319)
+exe '3resize ' . ((&lines * 39 + 41) / 82)
+exe 'vert 3resize ' . ((&columns * 159 + 159) / 319)
+tabnext 1
+if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
+  silent exe 'bwipe ' . s:wipebuf
+endif
+unlet! s:wipebuf
+set winheight=1 winwidth=20
+let &shortmess = s:shortmess_save
+let &winminheight = s:save_winminheight
+let &winminwidth = s:save_winminwidth
+let s:sx = expand("<sfile>:p:r")."x.vim"
+if filereadable(s:sx)
+  exe "source " . fnameescape(s:sx)
+endif
+let &g:so = s:so_save | let &g:siso = s:siso_save
+set hlsearch
+doautoall SessionLoadPost
+unlet SessionLoad
+" vim: set ft=vim :

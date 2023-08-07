@@ -76,7 +76,7 @@ void insert_into_subtree(rbt_t* T, node_t* subtree_root, node_t* node_to_insert)
 		//else
 		z = z->c[dir];
 	}
-	color_fix_after_insert(T, node_to_insert);
+	//color_fix_after_insert(T, node_to_insert);
 }
 
 void insert_into_tree(rbt_t* T, node_t* node_to_insert)
@@ -344,10 +344,10 @@ int main(int argc, char** argv)
 		navigate_tree_prompt(tree, tree->root);
 	}
 	} else {
-		int number = 1 << 24;
+		int number = pow(2, 24);
 		printf("number - %d\n", number);
 	for (int i = 0; i < number; i++){
-		int key = rand();
+		int key = rand() % 2000 - 1000;
 		//printf("Adding %d\n", key);
 		char* name = " ith node";
 		//name[0] = (i % 10) + '0';
@@ -357,8 +357,8 @@ int main(int argc, char** argv)
 
 	}
 	}
-//	validate_tree(tree);
-	//write_dot_graph(tree, "trash/ok.dot");
+	//validate_tree(tree);
+//	write_dot_graph(tree, "trash/ok.dot");
 //	navigate_tree_prompt(tree, tree->root);
 }
 
