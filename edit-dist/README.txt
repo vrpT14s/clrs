@@ -1,0 +1,121 @@
+Edit distance and fzf with transposition detection: CLRS 15-5
+Given two strings we need to calculate the least no. of transformations to go from one to the other. If we have an optimal solution, and we pop off the last operation, then this must also be the best path from A to this unfinished B, or else we could just switch it for the best one and contradict the given assumption. Thus the last edit must belong to the set of transformations that have optimum tails. Since the number of possible edits we have are 6 here, but we'll round it to 10, we only need to look at 10 possibilities and we have 10 subproblems. This happens every time.
+
+Of course this is very similar to the LCS problem, at least my answer, since I'm using something similar to prefix strings or whatever you call them.
+
+I'd like to highlight the edits like fzf does, I'm pretty sure fzf uses LCS so that's easier there maybe? Let's outline the program a little bit more then we'll think about recovering the method. Now we're only finding out the distance. The edge cases are clear: if one is empty then the edit distance is... Am I thinking about this all wrong actually? I don't think I am. I think I've proved everything so far. Either way, if one string is empty then the edit distance is the length of the other string... Actually not quite. There can be some assymetry here based on our rules, the transformation from "ABCDEFG" to "" is only one command, kill, while the opposite is 7. Of course we don't need to worry about this for its use as some kind of metric since we don't care about that, we're using this with clear assymetry in the application. The user enters a word, or half a word, and that's the source and we check how close they are, how many transformations they need, to go to a real word, or a real file in fzf's case.
+
+Okay then how do we go about doing this? Let's think of the recursive function, to check against and to make sure things work:
+
+int edit_distance(source, destination)
+{
+	//hardcode the various actions
+
+}
+
+How do I figure out the last step... Odd. Well I need to think of all the possible ways we could end up with the destination. Of course we'll need to think about our transformations specifically:
+
+copy inverse - only works if the last characters are the same - tail destination
+replace - tail destination
+delete - any one character at all? That's in general, but obviously unneeded deletes are (by definition of unneeded...) unoptimal. How can delete be useful? Take:
+ABCDEF and ABDEF
+this would be copy, copy, delete. The alternative would be much more. I still don't see how I'll be able to predict... Is it the last character of the source string maybe? Since there's no reason to change it otherwise, except for twiddle, but if you're going to do that then you might as well use replace... except for rare scenarios where twiddling is very cheap... So it'll either be the destination + last character of the source, or the destination plus the second last, and this will only work if the last character is the same in both source and dest.
+
+How do I prove there's no point otherwise? Insert, copy, replace can only affect the top character, delete too (there's some subtlety I'm missing) and twiddle looks at it too. Now, kill. Kill is special. But let's talk about insert first. Insert will also just be tail destination. Wait a second, replace can be anything at all, too?
+
+ABCD? -> ABCDE
+
+Can I use the same argument as before? Are you leaving me to search 25 strings? If not more? Well it can only come in the first string or the second, since we know inserting X when it's in neither is useless. Thus my theory is it's also the last character of the first string... We also have to remember we can't move back here. So if it's going to be the first string it has to be the last character. Well, that solves some things. It could also be, however, a twiddle... Ah maybe not. Let me check. Nevermind! The twiddle places the cursor after both, so we can't twiddle then delete the second character. So nevermind before too. Thus
+
+ABCD(last src) -> ABCDE for REPLACE
+
+Let's think of kill, finally. That would be, I'm using the _ to mean the cursor:
+ABCDE_???? -> ABCDE
+
+Hmm. Clearly it needs to be some suffix string of the source. Let's consider completely disjoint strings, no common characters... no wait I think I've confused myself? Nevermind I haven't.
+
+ABC, XYZ
+			_
+insert			X_
+insert			XY_
+insert			XYZ_
+kill			XYZ
+
+That's the most efficient way to do it, actually the only way, since we can't move back. If it were
+XABC, XYZ
+then it'd be copy, insert Y, insert Z, kill. So clearly it can be any prefix string, even zero. I don't think I have any choice but to check all of them I think... The problem is that they get longer. Hmm. Actually I think we can use another technique, we use a suffix string of the source instead. Here's the idea:
+
+XABC -> XYZ takes the same effort as X -> XYZ
+In general, if we kill while there are n character's left on the table then it takes as much effort as if we took the prefix with the last n cut. Proof? Well, isn't that what kill does? Okay, this seems correct, we'll look at this later if need be. So currently we're going to be looking at n prefix strings but fortunately they get smaller. And more importantly for us, since they get smaller, that means we've already computed them if it's DPM.
+
+So we covered
+copy - remove last
+insert - remove last
+replace - replace last of destination with last of source
+delete - append last of source
+twiddle - remove the last two, but only if they match the last two of source.
+kill - affect source instead, and compute all the prefix string transformations to the destination
+
+That's six. The only thing I'm worried about is delete since it increases the size. Let's take an example. Let's consider
+ABCDE -> XYZ
+
+So we can't run copy since E =/= Z, for insert we find ABCDE -> XY, for replace we find ABCDE -> XYE... Hmm doubtful about that. Actually, isn't this just the same as ABCD -> XY? I mean since the end's are the same, obviously.
+
+(Edit: Wrong about the copy costs!)
+Conjecture: s1 . s2 -> s3 . s2 is the same as s1 -> s2, plus length of s2 cpoys. Assuming of course that copy has less cost than replace, which it definitely should. I'm going to put that down as a necessity, that copy cost must be less than replace cost.
+
+In this case then,
+replace - remove last from source and add 1 copy function
+No wait, I'm thinking about this wrong. the E is already there, of course. This is wrong! Now, you would need a kill there too. Of course we don't want the kill, we need to continue it, we need to replace it. The kill is a special command since you can only run it at the end, so for us we only need to worry about it at the end.
+
+Okay, so:
+replace - remove last from source and last from destination
+
+Okay so let's have a test run. We'll forget about kill for now.
+
+int edit_dist(src, dist):
+	if src '' then return strlen * costof(insert)
+	if dist '' then return strlen * costof(delete)
+	return min out of:
+		//copy
+		if head src == head dist:
+		costof(copy) + edit_dist(tail(src), tail(dist))
+		//replace
+		costof(replace) + edit_dist(tail(src), tail(dist))
+		//delete
+		costof(delete) + edit_dist(tail(src), dist)
+		//twiddle
+		if first and second same when flipped:
+		costof(twiddle) + edit_dist(tail(tail(src))+tailtail dist)
+		//insert
+		costof(insert) + edit_dist(src, tail(dist))
+
+I think I could've realised this quicker if I had done some test problems first. Misunderstood the cursor a little bit. Let's explain why copy is that. Well, in order to have copy copy the last character, we need the cursor to be on the last character in source and we need to have all of dist except the last one. thus tail src, tail dist.
+
+Why replace? Same.
+Why delete? We need the cursor to be on the last character on src but we need to have finished with dist. Thus we needed to have translated the tail of src to the full dist
+Why twiddle? Similar to copy.
+Why insert? We need to be done with src and we need to insert the last character of dist, so we need to have the tail of dist ready.
+
+Finally, kill would require its own for loop to look at all the prefix strings of src, and we can't do this recursively because we need to know for a fact that this is the end. So we would need a wrapper for the recursive thing, a helper entry function.
+
+Ah I forgot to add the edge case.
+
+Tails are easy in C just by taking length as an argument, so just call the function with decremented length. twice decremented for twiddle. I wonder if I should try writing it now or wait until later... I might forget everything by then so I'll do it now. Ah I think I'll do it in another programming language to prototype it, because I'll go mad in C.
+
+2023-08-07
+Nevermind about the other language, just did it in C. The recursive one worked but unsurprisingly took way too long. I had a 40 char string against something smaller I don't remember, and it took more than 5 seconds (by that point I turned it off), but after some annoyances with figuring out how to pass the memo, I made the simple memo version (recursive but if there's a memo value you leave) and it works much faster, does that 40 char thing instantly. Haven't tested the limits of it or anything yet. I've yet to make the memo memo version, where I remove recursion completely, and I can't actually see what actions it chooses, I got around that by making the costs 1, 10, 100 etc. so as long as there aren't more than 9 of each I can figure out which one it calls, and it seems pretty good. For example I'll purposefully put a twiddle typo and then a replace one later and sure enough the cost was twiddle + replace. Now technically speaking I don't even really need to make it print the actions it chose, I probably only need that for debugging, and I guess it's neat too, because it did better than me one time, when it used replace instead of delete than add or something. Ah, I also haven't implemented kill yet. I can do it now probably but I'll just do the memo memo memo version and be done with it. Kill would be n times the effort without memoing, but with memoing it's just n array lookups.
+
+Now about the highlighting... fzf can get away with adding it easily since you can just mark them, it's pretty easy in the code, by that I mean only a few lines. How would I do it for me? Twiddles can just be in a different colour and I highlight both of them. Insertions I'll leave uncoloured, I'll colour the copy's. I'll make delete cost a lot, I don't know how I'd show it. The natural way is to colour the source string but it's comparing a source string to many destinations so of course it can't do that... or is it doing the opposite actually? Let's think about kill... It would make sense, yeah, no sense in the opposite. So actually we have lots of sources and one destination... In that case I would make delete quite cheap and insert quite expensive, though not too much, and twiddle is the same, and copy is even more cheap. I can also, funnily enough, have negative values for the costs. I'd like to see what bizarre methods the computer would use to game the system. An infinite score is impossible of course, here an infinitely negative score, since the cursor moves to the right by at least 1 each time, so your best score is at most the string length times that score... Not quite? Wait, no, yes. Even when you insert, you can't insert then delete the inserted character, since you move past the inserted character. That's nice.
+
+Also, about recursion, I've always been worried about "context/scope arguments" for the function, for example here I would keep the memo table as an argument so it'd be in scope for each. I say would, because what I actually did was use a global struct instead of course. That was because I was worried it would slow down the program, pushing it and popping and so on, but now I realise, while yes it would when it uses the stack, normally you pass arguments in %rdi or %rdx or whatever, so the computer probably would just take one of the registers as the argument one, and just leave it there forever. So actually, they're not expensive at all, assuming you don't have too many. Now the natural way the computer picks to keep as register argument and stack argument is it has an ordered list of the registers it can use, and then it just takes the first n or how many those are. So I might want to keep my scope arguments first... Of course this is easily checked so I can just go into main and check when I'm passing memo array or whatever. How nice. Let's check the assembly as it is now. Or nevermind, in a bit.
+
+Also, to be fair about the purely recursive one, I ran it at -O0 so it might not have been that bad. I feel slightly lazy about doing the memo memo. The order is straightforward and I know for a fact we end up computing every single entry anyway (Without kill anyway, though I'm pretty sure for kill as well...), so we're not doing any extra work.
+
+I think I'm done now. I added the action setting thing, but I'll add another function to remove it, because I don't need it if I'm doing something like spellcheck. To be clear, I added the actions array, I also added KILL, but I added the actions array but I didn't set up the code to read it. Also I would need to return the length at which point I killed. Seems tedious so I'm going to set up a dictionary thing and call it a day. If I use this for something eventually, then I'll set up the action thing, mostly to check if it really is working correctly. But my technique of changing the costs slightly isn't that bad. The program seems mostly correct. I'll add the non-action version and have a big list of strings, take that in from a file, and compare with that or something. I might also want... Hmm... I was going to say I wanted a kind of culling, where I could just leave if I knew there was a better option, might think about that but doubt it'll be that good. In the recursive solution I think I could exit if the current costs are greater than... But that'd be in the masterloop... Yeah, I'll think about this if it's really slow, but if it's really slow then I give up, the problem's done.
+
+Wait nevermind, not a dictionary, fzf first. That's easier too so that's good.
+
+Hmm. Shouldn't I go from input to output and calculate how hard that would be? This doesn't matter too much because replace, copy and twiddle are symmetrical, and insert and delete are opposites, but KILL should have a give-up as its counterpart. Seems complicated. Seems to work so far. Wait let me check with something. I saw a Creel video about this, before I read about dynamic memory programming in CLRS, and it was about spellcheck. Didn't have twiddle though. Pretty similar to LCS, about going left and going up or going left and up if they match. I thought it was very bizarre that they could come up with this complicated matrix thing (of course it's not a matrix it's just a 2d array), but now I can see that it's a logical, straightforward movement from one to the other, not something someone thought up at random by trial and error. Anyway I wanted to see what the edit distance was, to see if it was working.
+
+Realised I can use a trick. CLRS discussed reducing the full table to a single row and a variable, I can do that too here but twiddle needs two chars back so I'll need two rows and two variables. Thus the memory requirements is 2 times the destination length + 2. Now there isn't anything special about the destination, if I switched the arguments I could also do this with the source length. So what I can do is if I choose the input string or the common string I check everything else against to be the destination string, the table will be the same size no matter the size of the other string, so I don't need to free a table then malloc it every time I compare. This might really speed up the program. But I'm not doing it now, I've already finished the problem.

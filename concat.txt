@@ -1,0 +1,1248 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+
+enum Action {REPLACE, COPY, DELETE, TWIDDLE, INSERT, KILL};
+
+int mmED(const char *source, const char *destination, const int *costof)
+{
+	const int m = strlen(destination);
+	const int n = strlen(source);
+
+	int (*memo)[m+1] = malloc(sizeof(int[n+1][m+1]));
+
+	memo[0][0] = 0;
+	for (int i = 1; i <= m; i++){
+		memo[0][i] = i*costof[INSERT];
+	}
+	for (int i = 1; i <= n; i++){
+		memo[i][0] = i*costof[DELETE];
+	}
+
+	for (int i = 1; i <= n; i++){
+	for (int j = 1; j <= m; j++){
+		//replace
+		int replace_cost = costof[REPLACE] + memo[i-1][j-1];
+		int lowest_cost = replace_cost;
+
+		//copy
+		if (source[i-1] == destination[j-1]){
+			int copy_cost = costof[COPY] + memo[i-1][j-1];
+			if (copy_cost < lowest_cost) lowest_cost = copy_cost;
+		}
+		//delete
+		int delete_cost = costof[DELETE] + memo[i-1][j];
+		if (delete_cost < lowest_cost) lowest_cost = delete_cost;
+
+		//twiddle
+		if ((i >= 2) && (j >= 2) && (source[i-1] == destination[j-2]) && (source[i-2] == destination[j-1])){
+			int twiddle_cost = costof[TWIDDLE] + memo[i-2][j-2];
+			if (twiddle_cost < lowest_cost) lowest_cost = twiddle_cost;
+		}
+		//insert
+		int insert_cost = costof[INSERT] + memo[i][j-1];
+		if (insert_cost < lowest_cost) lowest_cost = insert_cost;
+
+		memo[i][j] = lowest_cost;
+	}}
+
+	//kill
+	int lowest_cost = memo[n][m];
+	//int best_action = 100;
+	for (int i = 0; i < n; i++){
+		int kill_cost = costof[KILL] + memo[i][m];
+		if (kill_cost < lowest_cost) lowest_cost = kill_cost;
+	}
+
+	return lowest_cost;
+}
+
+int main(int argc, char **argv)
+{
+	int costof[6];
+	costof[COPY]       = 1;
+	costof[REPLACE]    = 100;
+	costof[DELETE]     = 10;
+	costof[TWIDDLE]    = 10;
+	costof[INSERT]     = 500;
+	costof[KILL]       = 200;
+	if (argc <= 1) {
+		fprintf(stderr, "mmED: No arguments.\n");
+		return 1;
+	}
+	//printf("> ");
+	//char input[50];
+	//scanf("%s", input);
+	for (int i = 2; i < argc; i++){
+		printf("%s - %d\n", argv[i], mmED(argv[i], argv[1], costof));
+	}
+	printf("Done.\n");
+	return 0;
+}
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+
+enum Action {REPLACE, COPY, DELETE, TWIDDLE, INSERT, KILL};
+
+int mmED(const char *source, const char *destination, const int *costof)
+{
+	const int m = strlen(destination);
+	const int n = strlen(source);
+
+	int (*memo)[m+1] = malloc(sizeof(int[n+1][m+1]));
+
+	memo[0][0] = 0;
+	for (int i = 1; i <= m; i++){
+		memo[0][i] = i*costof[INSERT];
+	}
+	for (int i = 1; i <= n; i++){
+		memo[i][0] = i*costof[DELETE];
+	}
+
+	for (int i = 1; i <= n; i++){
+	for (int j = 1; j <= m; j++){
+		//replace
+		int replace_cost = costof[REPLACE] + memo[i-1][j-1];
+		int lowest_cost = replace_cost;
+
+		//copy
+		if (source[i-1] == destination[j-1]){
+			int copy_cost = costof[COPY] + memo[i-1][j-1];
+			if (copy_cost < lowest_cost) lowest_cost = copy_cost;
+		}
+		//delete
+		int delete_cost = costof[DELETE] + memo[i-1][j];
+		if (delete_cost < lowest_cost) lowest_cost = delete_cost;
+
+		//twiddle
+		if ((i >= 2) && (j >= 2) && (source[i-1] == destination[j-2]) && (source[i-2] == destination[j-1])){
+			int twiddle_cost = costof[TWIDDLE] + memo[i-2][j-2];
+			if (twiddle_cost < lowest_cost) lowest_cost = twiddle_cost;
+		}
+		//insert
+		int insert_cost = costof[INSERT] + memo[i][j-1];
+		if (insert_cost < lowest_cost) lowest_cost = insert_cost;
+
+		memo[i][j] = lowest_cost;
+	}}
+
+	//kill
+	int lowest_cost = memo[n][m];
+	//int best_action = 100;
+	for (int i = 0; i < n; i++){
+		int kill_cost = costof[KILL] + memo[i][m];
+		if (kill_cost < lowest_cost) lowest_cost = kill_cost;
+	}
+
+	return lowest_cost;
+}
+
+//TODO:
+int mmmED(const char *source, const char *destination, const int *costof)
+{
+	const int m = strlen(destination);
+	const int n = strlen(source);
+
+	int (*memo)[m+1] = malloc(sizeof(int[3][m+1]));
+
+	memo[0][0] = 0;
+	for (int i = 1; i <= m; i++){
+		memo[0][i] = i*costof[INSERT];
+	}
+	for (int i = 1; i <= n; i++){
+		memo[i][0] = i*costof[DELETE];
+	}
+
+	for (int i = 1; i <= n; i++){
+	for (int j = 1; j <= m; j++){
+		//replace
+		int replace_cost = costof[REPLACE] + memo[i-1][j-1];
+		int lowest_cost = replace_cost;
+
+		//copy
+		if (source[i-1] == destination[j-1]){
+			int copy_cost = costof[COPY] + memo[i-1][j-1];
+			if (copy_cost < lowest_cost) lowest_cost = copy_cost;
+		}
+		//delete
+		int delete_cost = costof[DELETE] + memo[i-1][j];
+		if (delete_cost < lowest_cost) lowest_cost = delete_cost;
+
+		//twiddle
+		if ((i >= 2) && (j >= 2) && (source[i-1] == destination[j-2]) && (source[i-2] == destination[j-1])){
+			int twiddle_cost = costof[TWIDDLE] + memo[i-2][j-2];
+			if (twiddle_cost < lowest_cost) lowest_cost = twiddle_cost;
+		}
+		//insert
+		int insert_cost = costof[INSERT] + memo[i][j-1];
+		if (insert_cost < lowest_cost) lowest_cost = insert_cost;
+
+		memo[i][j] = lowest_cost;
+	}}
+
+	//kill
+	int lowest_cost = memo[n][m];
+	//int best_action = 100;
+	for (int i = 0; i < n; i++){
+		int kill_cost = costof[KILL] + memo[i][m];
+		if (kill_cost < lowest_cost) lowest_cost = kill_cost;
+	}
+
+	return lowest_cost;
+}
+
+int main(int argc, char **argv)
+{
+	int costof[6];
+	costof[COPY]       = 0;
+	costof[REPLACE]    = 1;
+	costof[DELETE]     = 1;
+	costof[TWIDDLE]    = 1;
+	costof[INSERT]     = 1;
+	costof[KILL]       = 2000;
+	if (argc <= 1) {
+		fprintf(stderr, "mmED: No arguments.\n");
+		return 1;
+	}
+	//printf("> ");
+	//char input[50];
+	//scanf("%s", input);
+	for (int i = 2; i < argc; i++){
+		printf("%s - %d\n", argv[i], mmED(argv[i], argv[1], costof));
+	}
+	printf("Done.\n");
+	return 0;
+}
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+
+enum Action {REPLACE, COPY, DELETE, TWIDDLE, INSERT, KILL};
+
+void argcompare(int* minimum, int* best_argument, int candidate, int argument)
+{
+	if (candidate >= *minimum) return;
+	*minimum = candidate;
+	*best_argument = argument;
+}
+
+struct Memo2D {
+	int* array;
+	int bounds;
+} memo;
+
+int mED(char* source, int n, char* destination, int m, int* costof)
+{
+	int *val = &memo.array[n*memo.bounds + m];
+	if (*val >= 0) return *val;
+	if ((n <= 0) && (m <= 0)) {
+		*val = 0;
+		return 0;
+	}
+	if (n <= 0){
+		*val = strlen(destination) * costof[INSERT];
+		return *val;
+	}
+	if (m <= 0){
+		*val = strlen(source) * costof[DELETE];
+		return *val;
+	}
+
+	//replace
+	int replace_cost = costof[REPLACE] + mED(source, n-1, destination, m-1, costof);
+	int lowest_cost = replace_cost;
+	enum Action best_action = REPLACE;
+
+	//copy
+	if (source[n-1] == destination[m-1]){
+		int copy_cost = costof[COPY] + mED(source, n-1, destination, m-1, costof);
+		argcompare(&lowest_cost, &best_action, copy_cost, COPY);
+	}
+	//delete
+	int delete_cost = costof[DELETE] + mED(source, n-1, destination, m, costof);
+	argcompare(&lowest_cost, &best_action, delete_cost, DELETE);
+
+	//twiddle
+	if ((source[n-1] == destination[m-2]) && (source[n-2] == destination[m-1])){
+		int twiddle_cost = costof[TWIDDLE] + mED(source, n-2, destination, m-2, costof);
+		argcompare(&lowest_cost, &best_action, twiddle_cost, TWIDDLE);
+	}
+	//insert
+	int insert_cost = costof[INSERT] + mED(source, n, destination, m-1, costof);
+	argcompare(&lowest_cost, &best_action, insert_cost, INSERT);
+
+	//printf("ba: %d\n", best_action);
+	*val = lowest_cost;
+	return lowest_cost;
+}
+
+//lol
+	//for (int i = 0; i < 10000; i++) memo = malloc(10000000000);
+
+int mmED(const char* source, const char* destination, const int* costof)
+{
+	const int m = strlen(destination);
+	const int n = strlen(source);
+
+	int (*memo)[m+1] = malloc(sizeof(int[n+1][m+1]));
+	char (*action)[m+1] = malloc(sizeof(char[n+1][m+1]));
+
+	memo[0][0] = 0;
+	action[0][0] = 100; //supposed to be undef?
+	for (int i = 1; i <= m; i++){
+		memo[0][i] = i*costof[INSERT];
+		action[0][i] = INSERT;
+	}
+	for (int i = 1; i <= n; i++){
+		memo[i][0] = i*costof[DELETE];
+		action[i][0] = KILL;
+	}
+
+	for (int i = 1; i <= n; i++){
+	for (int j = 1; j <= m; j++){
+		//replace
+		int replace_cost = costof[REPLACE] + memo[i-1][j-1];
+		int lowest_cost = replace_cost;
+		enum Action best_action = REPLACE;
+
+		//copy
+		if (source[i-1] == destination[j-1]){
+			int copy_cost = costof[COPY] + memo[i-1][j-1];
+			argcompare(&lowest_cost, &best_action, copy_cost, COPY);
+		}
+		//delete
+		int delete_cost = costof[DELETE] + memo[i-1][j];
+		argcompare(&lowest_cost, &best_action, delete_cost, DELETE);
+
+		//twiddle
+		if ((i >= 2) && (j >= 2) &&
+				(source[i-1] == destination[j-2]) && (source[i-2] == destination[j-1])){
+			int twiddle_cost = costof[TWIDDLE] + memo[i-2][j-2];
+			argcompare(&lowest_cost, &best_action, twiddle_cost, TWIDDLE);
+		}
+		//insert
+		int insert_cost = costof[INSERT] + memo[i][j-1];
+		argcompare(&lowest_cost, &best_action, insert_cost, INSERT);
+
+		memo[i][j] = lowest_cost;
+		action[i][j] = best_action;
+	}}
+
+	//kill
+	int lowest_cost = memo[n][m];
+	//int best_action = 100;
+	for (int i = 0; i < n; i++){
+		int calculated_cost = costof[KILL] + memo[i][m];
+		if (calculated_cost < lowest_cost){
+			lowest_cost = calculated_cost;
+			//best_action = KILL;
+		}
+	}
+
+	return lowest_cost;
+}
+
+int main()
+{
+	int costof[6];
+	costof[COPY]       = 0;
+	costof[REPLACE]    = 100;
+	costof[DELETE]     = 100;
+	costof[TWIDDLE]    = 10;
+	costof[INSERT]     = 1000;
+	costof[KILL]       = 10;
+	//recursion setup
+	{
+		int size = (strlen(X) + 1)*(strlen(Y) + 1);
+		size_t* bytesize = sizeof(int)*size;
+		printf("memo size - %d\n", size);
+		memo.array = malloc(bytesize);
+		for (int i = 0; i < size; i++) memo.array[i] = -1;
+		memo.bounds = strlen(Y) + 1;
+	}
+	int ed  = mED(X, strlen(X), Y, strlen(Y), costof);
+	int ed2 =mmED(X, Y, costof);
+	printf("%d vs %d\n", ed, ed2);
+}
+
+#include <stdio.h>
+#include <stdlib.h>
+#define N 4
+
+int dimensions[N+1] = {
+	5,
+	4,
+	3,
+	5,
+	6,
+};
+//cost of array a = i; a < j; a++
+int cost_memo[N][N] = { 0 };
+//int best_cuts[N] = { 0 };
+int optimal_cost(int* dimensions, int i, int j)
+{
+	if (cost_memo[i][j] > 0) return cost_memo[i][j];
+	int min_cost = -1;
+	//int min_cut = -1;
+	if (j - i == 2) {
+		min_cost = dimensions[i]*dimensions[i]*dimensions[j];
+	}
+	for (int cut = 2; cut < (j - i) - 2; cut++){
+		int cost = dimensions[i]*dimensions[cut]*dimensions[j];
+		cost += optimal_cost(dimensions, i, i+cut);
+		cost += optimal_cost(dimensions, i+cut, j);
+		if (cost < min_cost) {
+			min_cost = cost;
+			//min_cut = i + cut;
+		}
+	}
+	cost_memo[i][j] = min_cost;
+	return min_cost;
+}
+
+int main()
+{
+	printf("%d\n", optimal_cost(dimensions, 0, N));
+	return 0;
+}
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+struct priority_queue_t {
+	int* array;
+	int size_of_array;
+	int nodes;
+} priority_queue_t;
+
+priority_queue_t* make_heap(int height)
+{
+	heap_t* heap = malloc(sizeof(heap_t));
+	int max_no_of_nodes = (1 << height);
+	heap->array = malloc(sizeof(int)*(max_no_of_nodes));
+	memcpy()
+	heap->nodes = 0;
+	return heap;
+}
+
+int extract_min(priority_queue_t* pq)
+{
+	int min = pq->array[0];
+	pq->array[0] = -1;
+	color_fix(0);
+	return min;
+}
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <time.h>
+
+#define LEFT 0
+#define RIGHT 1
+
+#define RED 0
+#define BLACK 1
+
+typedef struct node_t
+{
+	struct node_t* p;
+	struct node_t* c[2];
+
+	bool color;
+
+	int key;
+	char* name; //just an example of satellite data, some use in debugging
+} node_t;
+
+typedef struct rbt_t
+{
+	node_t* root;
+	node_t* nil;
+
+	int bheight;
+	int height;
+	int number_of_nodes;
+
+	char* name; //also example/debugging
+} rbt_t;
+
+node_t* make_node(rbt_t* T, bool color, int key, char* name)
+{
+	node_t* n = malloc(sizeof(node_t));
+	n->color = color;
+	n->key = key;
+	n->name = name;
+
+	n->p = T->nil;
+	n->c[0] = T->nil;
+	n->c[1] = T->nil;
+	return n;
+}
+
+rbt_t* make_tree(node_t* nil, char* name)
+{
+	rbt_t* rbt = malloc(sizeof(rbt_t));
+	rbt->nil = nil;
+	rbt->name = name;
+
+	rbt->root = nil;
+	rbt->bheight = 0;
+	rbt->height = 0;
+	rbt->number_of_nodes = 0;
+
+	return rbt;
+}
+
+void insert_into_subtree(rbt_t* T, node_t* subtree_root, node_t* node_to_insert)
+{
+	node_t* z = subtree_root;
+	while(true){
+		bool dir = (node_to_insert->key > z->key);
+		if (z->c[dir] == T->nil){
+			z->c[dir] = node_to_insert;
+			node_to_insert->p = z;
+
+			node_to_insert->color = RED;
+			node_to_insert->c[0] = T->nil;
+			node_to_insert->c[1] = T->nil;
+			break;
+		}
+		//else
+		z = z->c[dir];
+	}
+	//color_fix_after_insert(T, node_to_insert);
+}
+
+void insert_into_tree(rbt_t* T, node_t* node_to_insert)
+{
+	if (T->root == T->nil){
+		T->root = node_to_insert;
+		node_to_insert->p = T->nil;
+
+		node_to_insert->color = BLACK;
+		node_to_insert->c[0] = T->nil;
+		node_to_insert->c[1] = T->nil;
+		node_to_insert->name = "ROOT";
+	} else {
+		insert_into_subtree(T, T->root, node_to_insert);
+	}
+	T->number_of_nodes++;
+}
+
+char color_char(bool color)
+{
+	return color ? 'b' : 'r';
+}
+
+void print_node(rbt_t* T, node_t* n)
+{
+	printf("\n");
+	char* printstring = "name\t%s\nkey\t%d\ncolor\t%c\n";
+	printf("\n");
+	printf(printstring, n->name, n->key, color_char(n->color));
+
+	if (n->c[LEFT] == T->nil) printf("\nLEFT NIL\n");
+	else {
+		printf("\nLEFT\n");
+		node_t* c = n->c[LEFT];
+		printf(printstring, c->name, c->key, color_char(c->color));
+	}
+
+	if (n->c[RIGHT] == T->nil) printf("\nRIGHT NIL\n");
+	else {
+		printf("\nRIGHT\n");
+		node_t* c = n->c[RIGHT];
+		printf(printstring, c->name, c->key, color_char(c->color));
+	}
+	return;
+}
+
+void rotate(rbt_t* T, node_t* p, bool dir)
+{
+	if (p == T->nil) {
+		printf("Rotate error.\n");
+		exit(1);
+	}
+	node_t* ch = p->c[!dir];
+	if (ch == T->nil) {
+		printf("Rotate error.\n");
+		exit(1);
+	}
+	//1 - set c's p to grandfather
+	ch->p = p->p;
+	if (ch == T->nil) {
+		printf("FUCK ALL OF YOU\n");
+		//ch = 1/0;
+		exit(1);
+	}
+	//2 - set grandfather's son (replace p) to ch(ild)
+	if (p->p != T->nil){
+		p->p->c[p->p->c[1] == p] = ch;
+	}
+	//3 - set p's p to ch
+	p->p = ch;
+	//4 - replace ch in p's c list with ch's swing c
+	p->c[!dir] = ch->c[dir];
+	//5 - set swing c's p to p, but only if it exists
+	if (ch->c[dir] != T->nil){
+		ch->c[dir]->p = p;
+	}
+	//6 - replace swing c in ch's c list with p
+	ch->c[dir] = p;
+	return;
+}
+
+void navigate_tree_prompt(rbt_t* T, node_t* starting_node)
+{
+	node_t* z = starting_node;
+	while(z != T->nil){
+		print_node(T, z);
+		printf("\n> ");
+		//int character = getc(stdout);
+		char character;
+		scanf(" %c", &character);
+		switch(character){
+		case 'p':
+			z = z->p;
+			break;
+		case 'l':
+			if (z->c[LEFT] == T->nil){
+				printf("NIL, not possible\n");
+				break;
+			}
+			z = z->c[LEFT];
+			break;
+		case 'r':
+			if (z->c[RIGHT] == T->nil){
+				printf("NIL, not possible\n");
+				break;
+			}
+			z = z->c[RIGHT];
+			break;
+		case 'L':
+			rotate(T, z, LEFT);
+			break;
+		case 'R':
+			rotate(T, z, RIGHT);
+			break;
+		case 't':
+			z = starting_node;
+			break;
+		case 'e':
+			return;
+		default:
+			printf("INVALID OPTION, use only p, l, r\n");
+			break;
+		}
+	}
+}
+
+bool type_of_child(node_t* child)
+{
+	return (child->p->c[1] == child);
+}
+
+void set_red(node_t* node)
+{
+	node->color = RED;
+}
+
+void set_black(node_t* node)
+{
+	node->color = BLACK;
+}
+
+void color_fix_after_insert(rbt_t* T, node_t* inserted_node)
+{
+	node_t* z = inserted_node;
+	while (z->p->color == RED) {
+		/* z - current node
+		 * p - parent
+		 * pp - grand parent
+		 * u - uncle
+		 */
+		bool pdir = type_of_child(z->p);
+		node_t* p = (z->p);
+		node_t* pp = (z->p->p);
+		node_t* u = (z->p->p->c[!pdir]);
+		//case 1:
+		//uncle is red
+case_1:
+		if (u->color == RED) {
+			set_black(u);
+			set_black(p);
+			set_red(pp);
+			z = pp;
+			continue;
+		}
+case_2:
+		//case 2:
+		//uncle is black and z is rotation adoptee
+		if (type_of_child(z) != pdir) {
+			rotate(T, p, pdir);
+			rotate(T, pp, !pdir);
+			set_black(z);
+			set_red(pp);
+			break;
+		}
+case_3:
+		//case 3:
+		//uncle is black and z is not rotation adoptee
+		rotate(T, pp, !pdir);
+		set_black(p);
+		set_red(pp);
+		break;
+	}
+	if (T->root->p != T->nil){
+		T->root = T->root->p;
+	}
+	set_black(T->root);
+}
+
+//returns bnode height of subtree
+int validate(rbt_t* T, node_t* subtree_root, int* temp_node_number)
+{
+	if (subtree_root == T->nil) return 1;
+	(*temp_node_number)++;
+	int bnodes1 = validate(T, subtree_root->c[0], temp_node_number);
+	int bnodes2 = validate(T, subtree_root->c[1], temp_node_number);
+	//if (bnodes1 < 0) return;
+	if (bnodes2 != bnodes1){
+		//can return neg value and propogate error
+		//if i dont want full exit
+		printf("%d - Black property fail\n", subtree_root->key);
+		//exit(1);
+	}
+
+	if (subtree_root->color == RED){
+		if (subtree_root->p->color == RED){
+			printf("%d - Red property fail\n", subtree_root->key);
+			//exit(1);
+		}
+		return bnodes1;
+	} else {
+		return bnodes1 + 1;
+	}
+}
+
+int validate_tree(rbt_t* rbt)
+{
+	int temp_node_number = 0;
+	int bheight = validate(rbt, rbt->root, &temp_node_number);
+	if (temp_node_number != rbt->number_of_nodes){
+		printf("calculated node number not accurate, node lossage\n");
+	}
+	printf("\n\n%d - nodes\n%d - calculated node number\n", rbt->number_of_nodes, temp_node_number);
+	printf("\ncalculated blackheight - %d\n", bheight);
+}
+
+void wdgh(rbt_t* T, node_t* node, FILE* fd)
+{
+	if (node == T->nil) return;
+	char* color_string = node->color ? "black" : "red";
+	fprintf(fd, "x%x [label=\"%d\",color=\"%s\",style=\"filled\"]\n", node, node->key, color_string);
+	fprintf(fd, "x%x -> x%x\n", node->p, node);
+	wdgh(T, node->c[0], fd);
+	wdgh(T, node->c[1], fd);
+	return;
+}
+
+void write_dot_graph(rbt_t* T, char* path)
+{
+	FILE* fd = fopen(path, "w");
+	if (fd == NULL) {
+		printf("Unable to open %s.\n", path);
+		exit(1);
+	}
+	fprintf(fd, "Digraph G {\n");
+	wdgh(T, T->root, fd);
+	fprintf(fd, "}\n");
+	fclose(fd);
+	printf("%s closed.\n");
+}
+
+int main(int argc, char** argv)
+{
+	srand(time(NULL));
+
+	node_t* nil = malloc(sizeof(node_t));
+	nil->color = BLACK;
+	nil->name = "NIL";
+	nil->key = 86064;
+	rbt_t* tree = make_tree(nil, "My Red Black Tree");
+	if (argc > 1){
+	for (int i = 1; i < argc; i++){
+		int key = atoi(argv[i]);
+		char* name = "ok";
+		insert_into_tree(tree, make_node(tree, RED, key, name));
+		navigate_tree_prompt(tree, tree->root);
+	}
+	} else {
+		int number = pow(2, 24);
+		printf("number - %d\n", number);
+	for (int i = 0; i < number; i++){
+		int key = rand() % 2000 - 1000;
+		//printf("Adding %d\n", key);
+		char* name = " ith node";
+		//name[0] = (i % 10) + '0';
+		//name[1] = (i) + '0';
+		insert_into_tree(tree, make_node(tree, RED, key, name));
+		//navigate_tree_prompt(tree, tree->root);
+
+	}
+	}
+	//validate_tree(tree);
+//	write_dot_graph(tree, "trash/ok.dot");
+//	navigate_tree_prompt(tree, tree->root);
+}
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <time.h>
+
+#define LEFT 0
+#define RIGHT 1
+
+#define RED 0
+#define BLACK 1
+
+typedef struct node_t
+{
+	struct node_t* p;
+	struct node_t* c[2];
+
+	bool color;
+
+	int key;
+	char* name; //just an example of satellite data, some use in debugging
+} node_t;
+
+typedef struct rbt_t
+{
+	node_t* root;
+	node_t* nil;
+
+	int bheight;
+	int height;
+	int number_of_nodes;
+
+	char* name; //also example/debugging
+} rbt_t;
+
+node_t* make_node(rbt_t* T, bool color, int key, char* name)
+{
+	node_t* n = malloc(sizeof(node_t));
+	n->color = color;
+	n->key = key;
+	n->name = name;
+
+	n->p = T->nil;
+	n->c[0] = T->nil;
+	n->c[1] = T->nil;
+	return n;
+}
+
+rbt_t* make_tree(node_t* nil, char* name)
+{
+	rbt_t* rbt = malloc(sizeof(rbt_t));
+	rbt->nil = nil;
+	rbt->name = name;
+
+	rbt->root = nil;
+	rbt->bheight = 0;
+	rbt->height = 0;
+	rbt->number_of_nodes = 0;
+
+	return rbt;
+}
+
+void insert_into_subtree(rbt_t* T, node_t* subtree_root, node_t* node_to_insert)
+{
+	node_t* z = subtree_root;
+	while(true){
+		bool dir = (node_to_insert->key > z->key);
+		if (z->c[dir] == T->nil){
+			z->c[dir] = node_to_insert;
+			node_to_insert->p = z;
+
+			node_to_insert->color = RED;
+			node_to_insert->c[0] = T->nil;
+			node_to_insert->c[1] = T->nil;
+			break;
+		}
+		//else
+		z = z->c[dir];
+	}
+	color_fix_after_insert(T, node_to_insert);
+}
+
+void insert_into_tree(rbt_t* T, node_t* node_to_insert)
+{
+	if (T->root == T->nil){
+		T->root = node_to_insert;
+		node_to_insert->p = T->nil;
+
+		node_to_insert->color = BLACK;
+		node_to_insert->c[0] = T->nil;
+		node_to_insert->c[1] = T->nil;
+		node_to_insert->name = "ROOT";
+	} else {
+		insert_into_subtree(T, T->root, node_to_insert);
+	}
+	T->number_of_nodes++;
+}
+
+char color_char(bool color)
+{
+	return color ? 'b' : 'r';
+}
+
+void print_node(rbt_t* T, node_t* n)
+{
+	printf("\n");
+	char* printstring = "name\t%s\nkey\t%d\ncolor\t%c\n";
+	printf("\n");
+	printf(printstring, n->name, n->key, color_char(n->color));
+
+	if (n->c[LEFT] == T->nil) printf("\nLEFT NIL\n");
+	else {
+		printf("\nLEFT\n");
+		node_t* c = n->c[LEFT];
+		printf(printstring, c->name, c->key, color_char(c->color));
+	}
+
+	if (n->c[RIGHT] == T->nil) printf("\nRIGHT NIL\n");
+	else {
+		printf("\nRIGHT\n");
+		node_t* c = n->c[RIGHT];
+		printf(printstring, c->name, c->key, color_char(c->color));
+	}
+	return;
+}
+
+void rotate(rbt_t* T, node_t* p, bool dir)
+{
+	if (p == T->nil) {
+		printf("Rotate error.\n");
+		exit(1);
+	}
+	node_t* ch = p->c[!dir];
+	if (ch == T->nil) {
+		printf("Rotate error.\n");
+		exit(1);
+	}
+	//1 - set c's p to grandfather
+	ch->p = p->p;
+	if (ch == T->nil) {
+		printf("FUCK ALL OF YOU\n");
+		//ch = 1/0;
+		exit(1);
+	}
+	//2 - set grandfather's son (replace p) to ch(ild)
+	if (p->p != T->nil){
+		p->p->c[p->p->c[1] == p] = ch;
+	}
+	//3 - set p's p to ch
+	p->p = ch;
+	//4 - replace ch in p's c list with ch's swing c
+	p->c[!dir] = ch->c[dir];
+	//5 - set swing c's p to p, but only if it exists
+	if (ch->c[dir] != T->nil){
+		ch->c[dir]->p = p;
+	}
+	//6 - replace swing c in ch's c list with p
+	ch->c[dir] = p;
+	return;
+}
+
+void navigate_tree_prompt(rbt_t* T, node_t* starting_node)
+{
+	node_t* z = starting_node;
+	while(z != T->nil){
+		print_node(T, z);
+		printf("\n> ");
+		//int character = getc(stdout);
+		char character;
+		scanf(" %c", &character);
+		switch(character){
+		case 'p':
+			z = z->p;
+			break;
+		case 'l':
+			if (z->c[LEFT] == T->nil){
+				printf("NIL, not possible\n");
+				break;
+			}
+			z = z->c[LEFT];
+			break;
+		case 'r':
+			if (z->c[RIGHT] == T->nil){
+				printf("NIL, not possible\n");
+				break;
+			}
+			z = z->c[RIGHT];
+			break;
+		case 'L':
+			rotate(T, z, LEFT);
+			break;
+		case 'R':
+			rotate(T, z, RIGHT);
+			break;
+		case 't':
+			z = starting_node;
+			break;
+		case 'e':
+			return;
+		default:
+			printf("INVALID OPTION, use only p, l, r\n");
+			break;
+		}
+	}
+}
+
+bool type_of_child(node_t* child)
+{
+	return (child->p->c[1] == child);
+}
+
+void set_red(node_t* node)
+{
+	node->color = RED;
+}
+
+void set_black(node_t* node)
+{
+	node->color = BLACK;
+}
+
+void color_fix_after_insert(rbt_t* T, node_t* inserted_node)
+{
+	node_t* z = inserted_node;
+	while (z->p->color == RED) {
+		/* z - current node
+		 * p - parent
+		 * pp - grand parent
+		 * u - uncle
+		 */
+		bool pdir = type_of_child(z->p);
+		node_t* p = (z->p);
+		node_t* pp = (z->p->p);
+		node_t* u = (z->p->p->c[!pdir]);
+		//case 1:
+		//uncle is red
+case_1:
+		if (u->color == RED) {
+			set_black(u);
+			set_black(p);
+			set_red(pp);
+			z = pp;
+			continue;
+		}
+case_2:
+		//case 2:
+		//uncle is black and z is rotation adoptee
+		if (type_of_child(z) != pdir) {
+			rotate(T, p, pdir);
+			rotate(T, pp, !pdir);
+			set_black(z);
+			set_red(pp);
+			break;
+		}
+case_3:
+		//case 3:
+		//uncle is black and z is not rotation adoptee
+		rotate(T, pp, !pdir);
+		set_black(p);
+		set_red(pp);
+		break;
+	}
+	if (T->root->p != T->nil){
+		T->root = T->root->p;
+	}
+	set_black(T->root);
+}
+
+//returns bnode height of subtree
+int validate(rbt_t* T, node_t* subtree_root, int* temp_node_number)
+{
+	if (subtree_root == T->nil) return 1;
+	(*temp_node_number)++;
+	int bnodes1 = validate(T, subtree_root->c[0], temp_node_number);
+	int bnodes2 = validate(T, subtree_root->c[1], temp_node_number);
+	//if (bnodes1 < 0) return;
+	if (bnodes2 != bnodes1){
+		//can return neg value and propogate error
+		//if i dont want full exit
+		printf("%d - Black property fail\n", subtree_root->key);
+		//exit(1);
+	}
+
+	if (subtree_root->color == RED){
+		if (subtree_root->p->color == RED){
+			printf("%d - Red property fail\n", subtree_root->key);
+			//exit(1);
+		}
+		return bnodes1;
+	} else {
+		return bnodes1 + 1;
+	}
+}
+
+int validate_tree(rbt_t* rbt)
+{
+	int temp_node_number = 0;
+	int bheight = validate(rbt, rbt->root, &temp_node_number);
+	if (temp_node_number != rbt->number_of_nodes){
+		printf("calculated node number not accurate, node lossage\n");
+	}
+	printf("\n\n%d - nodes\n%d - calculated node number\n", rbt->number_of_nodes, temp_node_number);
+	printf("\ncalculated blackheight - %d\n", bheight);
+}
+
+void wdgh(rbt_t* T, node_t* node, FILE* fd)
+{
+	if (node == T->nil) return;
+	char* color_string = node->color ? "black" : "red";
+	fprintf(fd, "x%x [label=\"%d\",color=\"%s\",style=\"filled\"]\n", node, node->key, color_string);
+	fprintf(fd, "x%x -> x%x\n", node->p, node);
+	wdgh(T, node->c[0], fd);
+	wdgh(T, node->c[1], fd);
+	return;
+}
+
+void write_dot_graph(rbt_t* T, char* path)
+{
+	FILE* fd = fopen(path, "w");
+	if (fd == NULL) {
+		printf("Unable to open %s.\n", path);
+		exit(1);
+	}
+	fprintf(fd, "Digraph G {\n");
+	wdgh(T, T->root, fd);
+	fprintf(fd, "}\n");
+	fclose(fd);
+	printf("%s closed.\n");
+}
+
+int main(int argc, char** argv)
+{
+	srand(time(NULL));
+
+	node_t* nil = malloc(sizeof(node_t));
+	nil->color = BLACK;
+	nil->name = "NIL";
+	nil->key = 86064;
+	rbt_t* tree = make_tree(nil, "My Red Black Tree");
+	if (argc > 1){
+	for (int i = 1; i < argc; i++){
+		int key = atoi(argv[i]);
+		char* name = "ok";
+		insert_into_tree(tree, make_node(tree, RED, key, name));
+		navigate_tree_prompt(tree, tree->root);
+	}
+	} else {
+		int number = 1 << 24;
+		printf("number - %d\n", number);
+	for (int i = 0; i < number; i++){
+		int key = rand();
+		//printf("Adding %d\n", key);
+		char* name = " ith node";
+		//name[0] = (i % 10) + '0';
+		//name[1] = (i) + '0';
+		insert_into_tree(tree, make_node(tree, RED, key, name));
+		//navigate_tree_prompt(tree, tree->root);
+
+	}
+	}
+//	validate_tree(tree);
+	//write_dot_graph(tree, "trash/ok.dot");
+//	navigate_tree_prompt(tree, tree->root);
+}
+
+#include <stdio.h>
+#include "bootleg_vector.h"
+
+int r = 0;
+int calculate_best_price(int n, int* prices)
+{
+	r++;
+	int max = prices[n - 1];
+	for (int cut = 1; cut < n / 2 + 1; cut++){
+		int calculated_price = calculate_best_price(n - cut, prices) + calculate_best_price(cut, prices);
+		if (calculated_price > max) max = calculated_price;
+	}
+	return max;
+}
+
+int prices[10] = {
+	1,
+	5,
+	8,
+	9,
+	10,
+	17,
+	17,
+	20,
+	24,
+	30,
+};
+
+
+int m = 0;
+int best_prices[10] = { 0 };
+int fake(int n, int* prices)
+{
+	m++;
+	if (best_prices[n - 1] > 0) return best_prices[n-1];
+	int max = prices[n - 1];
+	for (int cut = 1; cut < n/2 + 1; cut++){
+		int calculated_price = cbr_memo(n - cut, prices) + cbr_memo(cut, prices);
+		if (calculated_price > max) max = calculated_price;
+	}
+	best_prices[n-1] = max;
+	return max;
+}
+
+stack_t* stack = NULL;
+int cutlist[10] = { 0 };
+int cbr_memo(int n, int* prices)
+{
+	if (best_prices[n - 1] > 0) {
+		push(stack, cutlist[n - 1]);
+		return best_prices[n-1];
+
+	}
+	int maxcut = 0;
+	int max = prices[n - 1];
+	for (int cut = 1; cut < n/2 + 1; cut++){
+		int calculated_price = cbr_memo(n - cut, prices) + cbr_memo(cut, prices);
+		if (calculated_price > max){
+			max = calculated_price;
+			maxcut = cut;
+		}
+	}
+	best_prices[n-1] = max;
+	cutlist[n - 1] = maxcut;
+	push(stack, maxcut);
+	return max;
+}
+
+
+
+int main()
+{
+	stack = make_stack();
+	cbr_memo(10, prices);
+	print_stack(stack);
+	return 0;
+}
+

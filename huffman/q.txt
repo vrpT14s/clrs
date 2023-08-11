@@ -1,0 +1,3 @@
+pq should store a pointer to a struct? Is that fast? I don't know. It doesn't matter actually it doesn't see it.
+
+The reason why structs of arrays are faster than arrays of structs is that the compiler can use xmm0's, or in the case of int just regular 64 bit registers as well, in order to manipulate multiple at the same time. This here however is impossible. So I think I should go for a general approach where I don't mention where my pointer is going, but I keep the freq as the first variable in the struct so I can just cast it to int and deref.
